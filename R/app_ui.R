@@ -10,10 +10,26 @@
 #' @noRd
 app_ui <- function(request) {
   tagList(
-    # Leave this function for adding external resources
     golem_add_external_resources(),
-    # Your application UI logic
     fluidPage(
+      tags$head(
+        tags$style(HTML("
+          .hover-name {
+            position: relative;
+            display: inline-block;
+          }
+          .hover-name .hover-image {
+            display: none;
+            position: fixed;
+            top: 0px;
+            left: 0px;
+            z-index: 1;
+          }
+          .hover-name:hover .hover-image {
+            display: block;
+          }
+        "))
+      ),
       titlePanel("Danish Vegetation Types"),
       sidebarLayout(
         shiny::sidebarPanel(
@@ -27,23 +43,16 @@ app_ui <- function(request) {
                                   multiple = TRUE)
           ),
           actionButton("update", "Pick random plot",
-                       class = "btn-primary",style='padding:4px; font-size:120%'),
-          # shiny::conditionalPanel(
-          #   condition = "input.update != 0",
-          #   shiny::h5("Do you need a hint?")),
-          # shiny::conditionalPanel(
-          #   condition = "input.update != 0",
-          #   shinyWidgets::switchInput("Hint", "Hint")),
-          # shiny::textOutput("major_hint"),
+                       class = "btn-primary", style='padding:4px; font-size:120%'),
           shiny::conditionalPanel(
             condition = "input.update != 0",
-          shiny::selectizeInput(inputId = "Answer",
-                              label = shiny::h3("What is this Major habitat type? choose it in the list"),
-                              choices = c(sort(as.character(stats::na.omit(unique(FloraExam::SpatialData$MajorHabName)))), ""),
-                              multiple = TRUE,
-                              options = list(maxItems = 1)),
-          shiny::uiOutput("Question2"),
-          shiny::htmlOutput("Rightwrong")
+            shiny::selectizeInput(inputId = "Answer",
+                                  label = shiny::h3("What is this Major habitat type? Choose it in the list"),
+                                  choices = c(sort(as.character(stats::na.omit(unique(FloraExam::SpatialData$MajorHabName)))), ""),
+                                  multiple = TRUE,
+                                  options = list(maxItems = 1)),
+            shiny::uiOutput("Question2"),
+            shiny::htmlOutput("Rightwrong")
           ),
           shiny::conditionalPanel(
             condition = "input.update != 0",
@@ -57,9 +66,8 @@ app_ui <- function(request) {
           shiny::textOutput("Artscore"),
           DT::DTOutput("tbl_myhab"),
           plotly::plotlyOutput("plot_ellenberg"),
-          plotly::plotlyOutput("plot_csr", width = "90%", height = "90%"),
+          plotly::plotlyOutput("plot_csr", width = "90%", height = "90%")
         )
-
       )
     )
   )
@@ -78,7 +86,10 @@ golem_add_external_resources <- function() {
     "www",
     app_sys("app/www")
   )
-
+  add_resource_path(
+    "data-raw",
+    app_sys("data-raw")
+  )
   tags$head(
     favicon(),
     bundle_resources(

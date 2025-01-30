@@ -3,10 +3,10 @@
 library(tidyverse)
 library(readxl)
 
-Characteristic_Species <- readxl::read_xlsx("data-raw/habitat_characteristic_species.xlsx") |>
+Characteristic_Species <- readxl::read_xlsx("data-raw/DFV_app_indicator_common_species.xlsx") |>
   tidyr::pivot_longer("1210":"91E0", names_to = "habtype", values_to = "characteristic") |>
   dplyr::filter(!is.na(characteristic)) |>
-  dplyr::select(gbifid, videnskabeligt_navn, accepteret_dansk_navn, taxonrang, habtype, characteristic) |>
+  dplyr::select(gbifid, videnskabeligt_navn, accepteret_dansk_navn, taxonrang, habtype, characteristic, taxon_id_Arter) |>
   dplyr::rename(Taxa = videnskabeligt_navn) #|>
 #  dplyr::mutate(habtype = as.numeric(habtype))
 

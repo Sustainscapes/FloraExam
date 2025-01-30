@@ -5,4 +5,4 @@ default:
 production:
   app_prod: yes
 dev:
-  golem_wd: /home/au687614/Documents/TestExamapp
+  golem_wd: !expr golem::pkg_path()
