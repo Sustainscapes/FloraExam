@@ -4,24 +4,39 @@ library(tidyverse)
 library(readxl)
 library(Artscore)
 
-Coords <- terra::vect("data-raw/Spatial.shp") |>
+Coords <- terra::vect("data-raw/Spatial.geojson") |>
   terra::geom() |>
   as.data.frame() |>
   dplyr::select(x, y)
 
 NewHabs <- read_xlsx("data-raw/Habitat_types_DFV_v2.xlsx") |>
-  dplyr::mutate(MajorHab = as.character(MajorHab),
-                habtype = as.character(habtype)) |>
+  dplyr::mutate(
+    MajorHab = as.character(MajorHab),
+    habtype = as.character(habtype)
+  ) |>
   dplyr::rename(habitat_name = habtypeName) |>
   dplyr::select("habtype", "habitat_name", "MajorHab", "MajorHabName")
 
-SpatialData <- terra::vect("data-raw/Spatial.shp") |>
+SpatialData <- terra::vect("data-raw/Spatial.geojson") |>
   as.data.frame() |>
   dplyr::bind_cols(Coords) |>
-  dplyr::rename(habitat_name  = habitat_na,
-                MajorHabName = MajorHabNa,
-                Lat = y,
-                Long = x) |>
+  dplyr::rename(
+    Lat = y,
+    Long = x
+  ) |>
+  # Match the major habitat type from the NewHabs data by matching the habtype
+  dplyr::mutate(habtype = as.character(habtype)) |>
+  left_join(NewHabs, by = "habtype") |>
+  dplyr::select(
+    "plot", "habtype", "MajorHab", "habitat_name", "MajorHabName", "Long", "Lat"
+  ) |>
+# SpatialData <- terra::vect("data-raw/Spatial.geojson") |>
+#   as.data.frame() |>
+#   dplyr::bind_cols(Coords) |>
+  # dplyr::rename(habitat_name  = habitat_na,
+  #               MajorHabName = MajorHabNa,
+  #               Lat = y,
+  #               Long = x) |>
   dplyr::select(-habitat_name, -MajorHabName) |>
   dplyr::mutate(plot = as.character(plot), habtype = as.character(habtype)) |>
   dplyr::mutate(habtype = case_when(habtype == "9998" ~ "91D0",
