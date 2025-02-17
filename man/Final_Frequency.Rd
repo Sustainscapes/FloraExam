@@ -3,7 +3,7 @@
 \docType{data}
 \name{Final_Frequency}
 \alias{Final_Frequency}
-\title{A subset of data from from a sampled dataset with the sampled species with this change}
+\title{A subset of data from from a sampled dataset with the sampled species with added taxon_id_Arter and photo_file.}
 \format{
 A data frame with 615860 rows and 6 columns:
 \describe{
@@ -19,6 +19,6 @@ A data frame with 615860 rows and 6 columns:
 Final_Frequency
 }
 \description{
-A subset of data from from a sampled dataset with the sampled species with this change
+A subset of data from from a sampled dataset with the sampled species with added taxon_id_Arter and photo_file.
 }
 \keyword{datasets}
