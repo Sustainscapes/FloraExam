@@ -3,21 +3,22 @@
 \docType{data}
 \name{Final_Frequency}
 \alias{Final_Frequency}
-\title{A subset of data from from a sampled dataset with the sampled species}
+\title{A subset of data from from a sampled dataset with the sampled species with this change}
 \format{
-A data frame with 8,436 rows and 5 columns:
+A data frame with 615860 rows and 6 columns:
 \describe{
+  \item{Taxa}{name of the species subspecies or variety}
   \item{plot}{Code for the plot}
   \item{year}{The sampled year}
-  \item{canonicalName}{name of the species subspecies or variety}
   \item{species}{name of the species, solved for synonyms}
-  \item{rank}{Taxonomic level it has been solved to
-}}
+  \item{taxon_id_Arter}{taxon_id for linking to Arter.dk}
+  \item{photo_file}{file name for photos in folder inst/Pictures}
+}
 }
 \usage{
 Final_Frequency
 }
 \description{
-A subset of data from from a sampled dataset with the sampled species
+A subset of data from from a sampled dataset with the sampled species with this change
 }
 \keyword{datasets}
