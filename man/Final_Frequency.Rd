@@ -5,12 +5,13 @@
 \alias{Final_Frequency}
 \title{A subset of data from from a sampled dataset with the sampled species with added taxon_id_Arter and photo_file.}
 \format{
-A data frame with 615860 rows and 6 columns:
+A data frame with 504838 rows and 7 columns:
 \describe{
-  \item{Taxa}{name of the species subspecies or variety}
+  \item{ID}{Unique ID for plot and year}
   \item{plot}{Code for the plot}
-  \item{year}{The sampled year}
   \item{species}{name of the species, solved for synonyms}
+  \item{year}{The sampled year}
+  \item{Accepteret_dansk_navn}{name of the species in danish}
   \item{taxon_id_Arter}{taxon_id for linking to Arter.dk}
   \item{photo_file}{file name for photos in folder inst/Pictures}
 }
