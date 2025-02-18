@@ -18,6 +18,10 @@
 #' @noRd
 #'
 
+# These codes are from the exceptions_and_rules.csv file
+cladonia_codes <- c("2130")
+sphagnum_codes <- c("7110", "7120", "7140", "91D0")
+
 resetForm<-function(session){
   updateSelectInput(session, "Answer",selected = "")
 }
@@ -34,23 +38,74 @@ app_server <- function(input, output, session) {
                         Dataset = NULL)
 
   # Your application server logic
-  my_habitatdata <- eventReactive(input$update, {
-    resetForm(session)
-    if(input$HabFilter){
-      FloraExam::SpatialData |>
-        dplyr::filter(MajorHabName %in% input$HabChoice) |>
-        dplyr::slice_sample(n = 1) |>
-        dplyr::left_join(FloraExam::Final_Frequency) |>
-        dplyr::left_join(FloraExam::Ellenberg_CSR) |>
-        dplyr::left_join(FloraExam::Characteristic_Species) |>
-        dplyr::distinct()
+    my_habitatdata <- eventReactive(input$update, {
+        resetForm(session)
+        if(input$HabFilter){
+            # This checks if the habtype is one where Cladonia or Sphagnum should be
+            # shown, from the exceptions_and_rules.csv file
+            # If the habitat type is, then it should be shown, else it should be hidden
+            FloraExam::SpatialData |>
+                dplyr::filter(MajorHabName %in% input$HabChoice) |>
+                dplyr::slice_sample(n = 1) |>
+                dplyr::left_join(FloraExam::Final_Frequency) |>
+                dplyr::left_join(FloraExam::Ellenberg_CSR) |>
+                dplyr::left_join(FloraExam::Characteristic_Species) |>
+                dplyr::mutate(
+                    species = ifelse(
+                        species == "Cladonia",
+                        ifelse(
+                            habtype %in% cladonia_codes,
+                            "Cladonia",
+                            NA
+                        ),
+                        species
+                    )
+                ) |>
+                dplyr::mutate(
+                    species = ifelse(
+                        species == "Sphagnum",
+                        ifelse(
+                            habtype %in% sphagnum_codes,
+                            "Sphagnum",
+                            NA
+                        ),
+                        species
+                    )
+                ) |>
+                dplyr::distinct() |>
+                dplyr::filter(!is.na(species))
     } else {
-      FloraExam::SpatialData |>
-        dplyr::slice_sample(n = 1) |>
-        dplyr::left_join(FloraExam::Final_Frequency) |>
-        dplyr::left_join(FloraExam::Ellenberg_CSR) |>
-        dplyr::left_join(FloraExam::Characteristic_Species) |>
-        dplyr::distinct()
+        FloraExam::SpatialData |>
+            dplyr::slice_sample(n = 1) |>
+            dplyr::left_join(FloraExam::Final_Frequency) |>
+            dplyr::left_join(FloraExam::Ellenberg_CSR) |>
+            dplyr::left_join(FloraExam::Characteristic_Species) |>
+            dplyr::mutate(
+                species = ifelse(
+                    species == "Cladonia",
+                    ifelse(
+                        habtype %in% cladonia_codes,
+                        "Cladonia",
+                        NA
+                    ),
+                    species
+                )
+            ) |>
+            dplyr::mutate(
+                species = ifelse(
+                    species == "Sphagnum",
+                    ifelse(
+                        habtype %in% sphagnum_codes,
+                        "Sphagnum",
+                        NA
+                    ),
+                    species
+                )
+            ) |>
+            dplyr::filter(!is.na(species)) |>
+            dplyr::group_by(species) |>
+            dplyr::slice(1) |>
+            dplyr::ungroup()
     }
     })
 
@@ -171,18 +226,39 @@ app_server <- function(input, output, session) {
 
   output$tbl_myhab <- DT::renderDT({
     Table <- my_habitatdata() |>
-      dplyr::select(NavnDansk,
-                    Taxa,
-                    light, temperature, moisture, reaction, nutrients, salinity, C, S , R, characteristic, taxon_id_Arter, photo_file) |>
+      dplyr::select(
+        NavnDansk,
+        species,
+        light,
+        temperature,
+        moisture,
+        reaction,
+        nutrients,
+        salinity,
+        C,
+        S,
+        R,
+        characteristic,
+        taxon_id_Arter,
+        photo_file
+      ) |>
       dplyr::mutate_if(is.numeric, round) |>
       dplyr::distinct()
 
     rvs$SpeciesList <- Table
     Table  |>
-      dplyr::mutate(NavnDansk = paste0('<div class="hover-name"><a href="https://arter.dk/taxa/taxon/details/', taxon_id_Arter,
-                                       '" target="_blank">', NavnDansk,
-                                       '<div class="hover-image"><img src="', 'Pictures/', photo_file,
-                                       '" width="475px"></div></div>')) |>
+        dplyr::mutate(
+            NavnDansk = paste0(
+                '<div class="hover-name"><a href="https://arter.dk/taxa/taxon/details/',
+                taxon_id_Arter,
+                '" target="_blank">',
+                NavnDansk,
+                '<div class="hover-image"><img src="',
+                'Pictures/',
+                photo_file,
+                '" width="475px"></div></div>'
+                )
+            ) |>
       dplyr::distinct() |>
       DT::datatable(options = list(lengthMenu = list(c(50, -1), c('50', 'All')),
                                    columnDefs = list(
