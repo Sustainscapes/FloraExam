@@ -171,16 +171,16 @@ app_server <- function(input, output, session) {
 
   output$tbl_myhab <- DT::renderDT({
     Table <- my_habitatdata() |>
-      dplyr::select(NavnDansk,
-                    Taxa,
+      dplyr::select(Accepteret_dansk_navn,
+                    species,
                     light, temperature, moisture, reaction, nutrients, salinity, C, S , R, characteristic, taxon_id_Arter, photo_file) |>
       dplyr::mutate_if(is.numeric, round) |>
       dplyr::distinct()
 
     rvs$SpeciesList <- Table
     Table  |>
-      dplyr::mutate(NavnDansk = paste0('<div class="hover-name"><a href="https://arter.dk/taxa/taxon/details/', taxon_id_Arter,
-                                       '" target="_blank">', NavnDansk,
+      dplyr::mutate(Accepteret_dansk_navn = paste0('<div class="hover-name"><a href="https://arter.dk/taxa/taxon/details/', taxon_id_Arter,
+                                       '" target="_blank">', Accepteret_dansk_navn,
                                        '<div class="hover-image"><img src="', 'Pictures/', photo_file,
                                        '" width="475px"></div></div>')) |>
       dplyr::distinct() |>
