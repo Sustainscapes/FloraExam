@@ -1,6 +1,6 @@
 Package: FloraExam
 Title: Danish Flora Exam app
-Version: 0.0.0.9000
+Version: 0.0.1.1
 Authors@R: 
     person("Derek", "Corcoran", , "derek.corcoran.barrios@gmail.com", role = c("cre", "aut"))
 Description: Generates a basic shiny app as an example of the test you
@@ -9,7 +9,7 @@ License: AGPL (>= 3)
 URL: https://github.com/Sustainscapes/FloraExam
 BugReports: https://github.com/Sustainscapes/FloraExam/issues
 Depends: 
-    R (>= 2.10)
+    R (>= 4.1)
 Imports: 
     Artscore,
     config (>= 0.3.1),
