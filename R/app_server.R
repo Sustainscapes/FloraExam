@@ -256,7 +256,7 @@ app_server <- function(input, output, session) {
           '<div class="hover-image"><img src="',
           'Pictures/',
           photo_file,
-          '" width="525px"></div></div>'
+          '" width="475px"></div></div>'
         )
       ) |>
       dplyr::distinct() |>
