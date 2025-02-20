@@ -14,6 +14,4 @@ Cleaned_Taxons <- SDMWorkflows::Clean_Taxa(Taxons = Characteristic_Species$Taxa,
 
 Characteristic_Species <- Cleaned_Taxons |> dplyr::left_join(Characteristic_Species)
 
-
-
 usethis::use_data(Characteristic_Species, overwrite = TRUE)

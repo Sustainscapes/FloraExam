@@ -18,6 +18,10 @@
 #' @noRd
 #'
 
+# These codes are from the exceptions_and_rules.csv file
+cladonia_codes <- c("2130")
+sphagnum_codes <- c("7110", "7120", "7140", "91D0")
+
 resetForm<-function(session){
   updateSelectInput(session, "Answer",selected = "")
 }
@@ -37,22 +41,73 @@ app_server <- function(input, output, session) {
   my_habitatdata <- eventReactive(input$update, {
     resetForm(session)
     if(input$HabFilter){
+      # This checks if the habtype is one where Cladonia or Sphagnum should be
+      # shown, from the exceptions_and_rules.csv file
+      # If the habitat type is, then it should be shown, else it should be hidden
       FloraExam::SpatialData |>
         dplyr::filter(MajorHabName %in% input$HabChoice) |>
         dplyr::slice_sample(n = 1) |>
         dplyr::left_join(FloraExam::Final_Frequency) |>
         dplyr::left_join(FloraExam::Ellenberg_CSR) |>
         dplyr::left_join(FloraExam::Characteristic_Species) |>
-        dplyr::distinct()
+        dplyr::mutate(
+          species = ifelse(
+            species == "Cladonia",
+            ifelse(
+              habtype %in% cladonia_codes,
+              "Cladonia",
+              NA
+            ),
+            species
+          )
+        ) |>
+        dplyr::mutate(
+          species = ifelse(
+            species == "Sphagnum",
+            ifelse(
+              habtype %in% sphagnum_codes,
+              "Sphagnum",
+              NA
+            ),
+            species
+          )
+        ) |>
+        dplyr::distinct() |>
+        dplyr::filter(!is.na(species))
     } else {
       FloraExam::SpatialData |>
         dplyr::slice_sample(n = 1) |>
         dplyr::left_join(FloraExam::Final_Frequency) |>
         dplyr::left_join(FloraExam::Ellenberg_CSR) |>
         dplyr::left_join(FloraExam::Characteristic_Species) |>
-        dplyr::distinct()
+        dplyr::mutate(
+          species = ifelse(
+            species == "Cladonia",
+            ifelse(
+              habtype %in% cladonia_codes,
+              "Cladonia",
+              NA
+            ),
+            species
+          )
+        ) |>
+        dplyr::mutate(
+          species = ifelse(
+            species == "Sphagnum",
+            ifelse(
+              habtype %in% sphagnum_codes,
+              "Sphagnum",
+              NA
+            ),
+            species
+          )
+        ) |>
+        dplyr::filter(!is.na(species)) |>
+        dplyr::group_by(species) |>
+        dplyr::slice(1) |>
+        dplyr::ungroup()
     }
-    })
+  })
 
   output$Artscore <- renderText({
     req(nrow(my_habitatdata()) > 0)  # Check if my_habitatdata() has at least 1 row
@@ -82,15 +137,15 @@ app_server <- function(input, output, session) {
 
   output$Question2 <- renderUI({
     if (req(input$Answer) == my_habitatdata()$MajorHabName[1]) {
-    shiny::selectizeInput(inputId = "Answer2",
-                          label = shiny::h3("You are correct!!, What is the specific habitat type? Choose it in the list"),
-                          choices = c(sort((dplyr::filter(FloraExam::SpatialData, MajorHabName == my_habitatdata()$MajorHabName[1]))$habitat_name), ""),
-                          multiple = TRUE,
-                          options = list(maxItems = 1))
+      shiny::selectizeInput(inputId = "Answer2",
+                            label = shiny::h3("You are correct!!, What is the specific habitat type? Choose it in the list"),
+                            choices = c(sort((dplyr::filter(FloraExam::SpatialData, MajorHabName == my_habitatdata()$MajorHabName[1]))$habitat_name), ""),
+                            multiple = TRUE,
+                            options = list(maxItems = 1))
     } else if (req(input$Answer) != my_habitatdata()$MajorHabName[1]) {
       shiny::HTML("<h2>Try again!<h2>")
     }
-    })
+  })
 
   output$Leaflet <- leaflet::renderLeaflet({
     if (req(input$Answer2) == my_habitatdata()$habitat_name[1]) {
@@ -171,23 +226,44 @@ app_server <- function(input, output, session) {
 
   output$tbl_myhab <- DT::renderDT({
     Table <- my_habitatdata() |>
-      dplyr::select(NavnDansk,
-                    Taxa,
-                    light, temperature, moisture, reaction, nutrients, salinity, C, S , R, characteristic, taxon_id_Arter, photo_file) |>
+      dplyr::select(
+        Accepteret_dansk_navn,
+        species,
+        light,
+        temperature,
+        moisture,
+        reaction,
+        nutrients,
+        salinity,
+        C,
+        S,
+        R,
+        characteristic,
+        taxon_id_Arter,
+        photo_file
+      ) |>
       dplyr::mutate_if(is.numeric, round) |>
       dplyr::distinct()
 
     rvs$SpeciesList <- Table
     Table  |>
-      dplyr::mutate(NavnDansk = paste0('<div class="hover-name"><a href="https://arter.dk/taxa/taxon/details/', taxon_id_Arter,
-                                       '" target="_blank">', NavnDansk,
-                                       '<div class="hover-image"><img src="', 'Pictures/', photo_file,
-                                       '" width="475px"></div></div>')) |>
+      dplyr::mutate(
+        Accepteret_dansk_navn = paste0(
+          '<div class="hover-name"><a href="https://arter.dk/taxa/taxon/details/',
+          taxon_id_Arter,
+          '" target="_blank">',
+          Accepteret_dansk_navn,
+          '<div class="hover-image"><img src="',
+          'Pictures/',
+          photo_file,
+          '" width="475px"></div></div>'
+        )
+      ) |>
       dplyr::distinct() |>
       DT::datatable(options = list(lengthMenu = list(c(50, -1), c('50', 'All')),
                                    columnDefs = list(
                                      list(visible = FALSE, targets = c(13, 14)))  # Indices of taxon_id_Arter and photo_file
-                                     ), escape = FALSE) %>%
+      ), escape = FALSE) %>%
       DT::formatStyle(
         'characteristic',
         target = 'row',
@@ -198,29 +274,28 @@ app_server <- function(input, output, session) {
     filename = paste0("Exam_Test", format(Sys.time(), "%Y-%m-%d"), ".pdf"),
     content = function(file) {
       shiny::withProgress(message = 'Preparing the report',
-                   detail = NULL,
-                   value = 0, {
-                     shiny::incProgress(amount = 0.1, message = 'Recovering all data')
+                          detail = NULL,
+                          value = 0, {
+                            shiny::incProgress(amount = 0.1, message = 'Recovering all data')
 
-                     tempReport <- file.path(tempdir(), "report.Rmd")
-                     file.copy(from = system.file("rmarkdown/templates/mock_exam/skeleton/skeleton.Rmd", package="FloraExam"), to = tempReport, overwrite = TRUE)
+                            tempReport <- file.path(tempdir(), "report.Rmd")
+                            file.copy(from = system.file("rmarkdown/templates/mock_exam/skeleton/skeleton.Rmd", package="FloraExam"), to = tempReport, overwrite = TRUE)
 
-                     # Set up parameters to pass to Rmd document
-                     params <- list(
-                       Artscore = rvs$Artscore,
-                       SpeciesList = rvs$SpeciesList,
-                       Histogram = rvs$Histogram,
-                       Ternary = rvs$Ternary,
-                       Dataset = rvs$Dataset
-                     )
+                            # Set up parameters to pass to Rmd document
+                            params <- list(
+                              Artscore = rvs$Artscore,
+                              SpeciesList = rvs$SpeciesList,
+                              Histogram = rvs$Histogram,
+                              Ternary = rvs$Ternary,
+                              Dataset = rvs$Dataset
+                            )
 
-                     shiny::incProgress(amount = 0.3, message = 'Printing the pdf')
-                     rmarkdown::render(tempReport, output_file = file,
-                                       params = params,
-                                       envir = new.env(parent = globalenv()))
-                   })
+                            shiny::incProgress(amount = 0.3, message = 'Printing the pdf')
+                            rmarkdown::render(tempReport, output_file = file,
+                                              params = params,
+                                              envir = new.env(parent = globalenv()))
+                          })
     }
   )
 
 }
-
