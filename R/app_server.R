@@ -48,8 +48,8 @@ app_server <- function(input, output, session) {
         dplyr::filter(MajorHabName %in% input$HabChoice) |>
         dplyr::slice_sample(n = 1) |>
         dplyr::left_join(FloraExam::Final_Frequency) |>
-        dplyr::left_join(FloraExam::Ellenberg_CSR) |>
-        dplyr::left_join(FloraExam::Characteristic_Species) |>
+        dplyr::left_join(FloraExam::Ellenberg_CSR, by = dplyr::join_by(species == matched_name2)) |>
+        dplyr::left_join(dplyr::select(FloraExam::Characteristic_Species, c(canonicalName, habtype, characteristic))) |>
         dplyr::mutate(
           species = ifelse(
             species == "Cladonia",
