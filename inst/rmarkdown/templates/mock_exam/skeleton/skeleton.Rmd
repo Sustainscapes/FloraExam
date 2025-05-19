@@ -31,10 +31,34 @@ The species list and their parameters are shown in table 1
 ```{r Species, echo = F}
 Table <- params$SpeciesList
 
+# Store color info before dropping columns
+row_colors <- ifelse(Table$characteristic == "I", "#a6d96a",
+              ifelse(Table$characteristic == "C", "#fdae61", NA))
+
+# Rename for display
+Table <- Table |> 
+  dplyr::mutate(across(everything(), ~ ifelse(is.na(.), "", .))) |> # Change all NAs to empty strings
+  dplyr::rename(
+    `Accepted Danish name` = Accepteret_dansk_navn,
+    `Species` = species,
+    `Light` = light,
+    `Temperature` = temperature,
+    `Moisture` = moisture,
+    `Reaction` = reaction,
+    `Nutrients` = nutrients,
+    `Salinity` = salinity,
+    `Characteristic` = characteristic,
+    `C` = C,
+    `S` = S,
+    `R` = R
+  )
+
+# Render the table
 kableExtra::kbl(Table, booktabs = T, caption = "Species list with their parameters, including ellenberg values and CSR values") |> 
-kableExtra::kable_styling(latex_options = c("scale_down", "hold_position"), position = "center") |> 
-  kableExtra::row_spec(row = which(Table$characteristic == "I"), background = '#a6d96a') |> 
-  kableExtra::row_spec(row = which(Table$characteristic == "C"), background =  '#fdae61')
+  kableExtra::kable_styling(latex_options = c("scale_down", "hold_position"), position = "center") |> 
+  kableExtra::row_spec(row = which(!is.na(Table$Characteristic) & Table$Characteristic == "I"), background = '#a6d96a') |> 
+  kableExtra::row_spec(row = which(!is.na(Table$Characteristic) & Table$Characteristic == "C"), background = '#fdae61')
+
 ```
 
 The histogram of the ecological indicator values can be seen in figure \@ref(fig:Ellenberg)
