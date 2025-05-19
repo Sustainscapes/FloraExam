@@ -284,7 +284,9 @@ app_server <- function(input, output, session) {
                             # Set up parameters to pass to Rmd document
                             params <- list(
                               Artscore = rvs$Artscore,
-                              SpeciesList = rvs$SpeciesList,
+                              SpeciesList = rvs$SpeciesList |>
+                                dplyr::select(-taxon_id_Arter, -photo_file) |>  # Drop these from display
+                                dplyr::mutate(Accepteret_dansk_navn = stringr::str_remove_all(Accepteret_dansk_navn, "<.*?>")),
                               Histogram = rvs$Histogram,
                               Ternary = rvs$Ternary,
                               Dataset = rvs$Dataset
