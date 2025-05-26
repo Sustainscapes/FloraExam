@@ -48,8 +48,8 @@ app_server <- function(input, output, session) {
         dplyr::filter(MajorHabName %in% input$HabChoice) |>
         dplyr::slice_sample(n = 1) |>
         dplyr::left_join(FloraExam::Final_Frequency) |>
-        dplyr::left_join(FloraExam::Ellenberg_CSR) |>
-        dplyr::left_join(FloraExam::Characteristic_Species) |>
+        dplyr::left_join(dplyr::select(FloraExam::Characteristic_Species, c(Taxa, habtype, characteristic)), by = dplyr::join_by(habtype, species == Taxa)) |>
+        dplyr::left_join(FloraExam::Ellenberg_CSR, by = dplyr::join_by(species == matched_name2)) |>
         dplyr::mutate(
           species = ifelse(
             species == "Cladonia",
@@ -78,8 +78,8 @@ app_server <- function(input, output, session) {
       FloraExam::SpatialData |>
         dplyr::slice_sample(n = 1) |>
         dplyr::left_join(FloraExam::Final_Frequency) |>
-        dplyr::left_join(FloraExam::Ellenberg_CSR) |>
-        dplyr::left_join(FloraExam::Characteristic_Species) |>
+        dplyr::left_join(dplyr::select(FloraExam::Characteristic_Species, c(Taxa, habtype, characteristic)), by = dplyr::join_by(habtype, species == Taxa)) |>
+        dplyr::left_join(FloraExam::Ellenberg_CSR, by = dplyr::join_by(species == matched_name2)) |>
         dplyr::mutate(
           species = ifelse(
             species == "Cladonia",
@@ -284,7 +284,9 @@ app_server <- function(input, output, session) {
                             # Set up parameters to pass to Rmd document
                             params <- list(
                               Artscore = rvs$Artscore,
-                              SpeciesList = rvs$SpeciesList,
+                              SpeciesList = rvs$SpeciesList |>
+                                dplyr::select(-taxon_id_Arter, -photo_file) |>  # Drop these from display
+                                dplyr::mutate(Accepteret_dansk_navn = stringr::str_remove_all(Accepteret_dansk_navn, "<.*?>")),
                               Histogram = rvs$Histogram,
                               Ternary = rvs$Ternary,
                               Dataset = rvs$Dataset

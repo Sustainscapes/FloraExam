@@ -28,6 +28,10 @@ app_ui <- function(request) {
           .hover-name:hover .hover-image {
             display: block;
           }
+          /* Custom CSS to prevent row highlighting */
+          .dataTable tbody tr.selected {
+            background-color: transparent !important;
+          }
         "))
       ),
       titlePanel("Danish Vegetation Types"),
