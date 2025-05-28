@@ -29,7 +29,7 @@ RUN Rscript -e 'remotes::install_github("Sustainscapes/Artscore@64eaf5a9d32ec62f
 RUN mkdir /build_zone
 ADD . /build_zone
 WORKDIR /build_zone
-RUN R -e 'remotes::install_local(upgrade="never")'
+RUN R -e 'remotes::install_local("/build_zone/FloraExam", upgrade="never")'
 RUN rm -rf /build_zone
 EXPOSE 80
 CMD R -e "options('shiny.port'=80,shiny.host='0.0.0.0');library(FloraExam);FloraExam::run_app()"
