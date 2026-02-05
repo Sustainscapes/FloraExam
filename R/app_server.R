@@ -49,7 +49,7 @@ app_server <- function(input, output, session) {
         dplyr::slice_sample(n = 1) |>
         dplyr::left_join(FloraExam::Final_Frequency) |>
         dplyr::left_join(dplyr::select(FloraExam::Characteristic_Species, c(Taxa, habtype, characteristic)), by = dplyr::join_by(habtype, species == Taxa)) |>
-        dplyr::left_join(FloraExam::Ellenberg_CSR, by = dplyr::join_by(species == matched_name2)) |>
+        dplyr::left_join(FloraExam::Ellenberg_CSR, by = dplyr::join_by(species == Videnskabeligt_navn)) |>
         dplyr::mutate(
           species = ifelse(
             species == "Cladonia",
@@ -79,7 +79,7 @@ app_server <- function(input, output, session) {
         dplyr::slice_sample(n = 1) |>
         dplyr::left_join(FloraExam::Final_Frequency) |>
         dplyr::left_join(dplyr::select(FloraExam::Characteristic_Species, c(Taxa, habtype, characteristic)), by = dplyr::join_by(habtype, species == Taxa)) |>
-        dplyr::left_join(FloraExam::Ellenberg_CSR, by = dplyr::join_by(species == matched_name2)) |>
+        dplyr::left_join(FloraExam::Ellenberg_CSR, by = dplyr::join_by(species == Videnskabeligt_navn)) |>
         dplyr::mutate(
           species = ifelse(
             species == "Cladonia",
@@ -170,13 +170,13 @@ app_server <- function(input, output, session) {
 
   output$plot_ellenberg <- plotly::renderPlotly({
     Medians <- my_habitatdata() |>
-      dplyr::select(light, temperature, moisture, reaction, nutrients, salinity) |>
+      dplyr::select(light, moisture, reaction, nutrients, salinity) |>
       tidyr::pivot_longer(tidyr::everything(), names_to = "Ellenberg") |>
       dplyr::group_by(Ellenberg) |>
       dplyr::summarise(Median = median(value, na.rm = T))
 
     G <- my_habitatdata() |>
-      dplyr::select(light, temperature, moisture, reaction, nutrients, salinity) |>
+      dplyr::select(light, moisture, reaction, nutrients, salinity) |>
       tidyr::pivot_longer(tidyr::everything(), names_to = "Ellenberg") |>
       ggplot2::ggplot(ggplot2::aes(x = Ellenberg, y = value)) + ggplot2::geom_boxplot() +
       ggplot2::coord_flip() + ggplot2::theme_bw() + ylim(c(0,10)) + ggplot2::xlab("Ecological indicator value") + ggplot2::xlab("Ecological indicator value") + ggrepel::geom_text_repel(data = Medians, aes(x = Ellenberg, y = Median, label = round(Median, 2)))
@@ -198,7 +198,7 @@ app_server <- function(input, output, session) {
         a = ~C,
         b = ~R,
         c = ~S,
-        text = ~Label,
+        text = ~Strategy,
         marker = list(
           symbol = "100",
           color = my_habitatdata()$RGB,
@@ -226,11 +226,13 @@ app_server <- function(input, output, session) {
 
   output$tbl_myhab <- DT::renderDT({
     Table <- my_habitatdata() |>
+      mutate(Accepteret_dansk_navn =
+               ifelse(is.na(dansk_flora_name),
+                      Accepteret_dansk_navn, dansk_flora_name)) %>%
       dplyr::select(
         Accepteret_dansk_navn,
         species,
         light,
-        temperature,
         moisture,
         reaction,
         nutrients,
@@ -249,7 +251,7 @@ app_server <- function(input, output, session) {
     Table  |>
       dplyr::mutate(
         Accepteret_dansk_navn = paste0(
-          '<div class="hover-name"><a href="https://arter.dk/taxa/taxon/details/',
+          '<div class="hover-name"><a href="https://arter.dk/taxa/',
           taxon_id_Arter,
           '" target="_blank">',
           Accepteret_dansk_navn,
@@ -262,7 +264,7 @@ app_server <- function(input, output, session) {
       dplyr::distinct() |>
       DT::datatable(options = list(lengthMenu = list(c(50, -1), c('50', 'All')),
                                    columnDefs = list(
-                                     list(visible = FALSE, targets = c(13, 14)))  # Indices of taxon_id_Arter and photo_file
+                                     list(visible = FALSE, targets = c(12, 13)))  # Indices of taxon_id_Arter and photo_file
       ), escape = FALSE) %>%
       DT::formatStyle(
         'characteristic',
@@ -270,6 +272,7 @@ app_server <- function(input, output, session) {
         backgroundColor = DT::styleEqual(c(NA, "I", "C"), c('white', '#a6d96a', '#fdae61'))
       )
   })
+
   output$report <- downloadHandler(
     filename = paste0("Exam_Test", format(Sys.time(), "%Y-%m-%d"), ".pdf"),
     content = function(file) {
