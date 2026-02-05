@@ -33,8 +33,9 @@ Final_Frequency$species <- ifelse(Final_Frequency$species == "Spartina ×townsen
 # Read in taxon data from Arter.dk. Excludes "Marchantiophyta", "Anthocerotophyta" and "Bryophyta" that are not Sphagnum.
 taxonlist_plants <- read_xlsx("data-raw/taxonlist_Plants.xlsx") |>
   filter(!(Række == "Bryophyta" & Familie != "Sphagnaceae") & Række != "Marchantiophyta" & Række != "Anthocerotophyta") |>
-  dplyr::select("Videnskabeligt navn", "Accepteret dansk navn", "TaxonId") |>
-  rename(Accepteret_dansk_navn = "Accepteret dansk navn", taxon_id_Arter = "TaxonId")
+  dplyr::select("Videnskabeligt navn", "Accepteret dansk navn", "ID_Arter", "Videnskabeligt navn Dansk Flora") |>
+  rename(Accepteret_dansk_navn = "Accepteret dansk navn", taxon_id_Arter = "ID_Arter")
+taxonlist_plants$taxon_id_Arter <- as.character(taxonlist_plants$taxon_id_Arter)
 
 taxonlist_lichens <- read_xlsx("data-raw/taxonlist_Lichens.xlsx") |>
   dplyr::select("Videnskabeligt navn", "Accepteret dansk navn", "TaxonId") |>
@@ -45,7 +46,8 @@ Final_Frequency <- Final_Frequency %>%
   left_join(taxonlist_lichens, by = join_by("species" == "Videnskabeligt navn")) %>%
   mutate(Accepteret_dansk_navn = coalesce(Accepteret_dansk_navn.x, Accepteret_dansk_navn.y)) %>%
   mutate(taxon_id_Arter = coalesce(taxon_id_Arter.x, taxon_id_Arter.y)) |>
-  select(-Accepteret_dansk_navn.x, -Accepteret_dansk_navn.y, -taxon_id_Arter.x, -taxon_id_Arter.y)
+  select(-Accepteret_dansk_navn.x, -Accepteret_dansk_navn.y, -taxon_id_Arter.x, -taxon_id_Arter.y) %>%
+  rename(dansk_flora_name = "Videnskabeligt navn Dansk Flora")
 
 # Remove records that did not match to Arter.dk taxa
 Final_Frequency <- Final_Frequency[!is.na(Final_Frequency$taxon_id_Arter),]
@@ -106,3 +108,4 @@ usethis::use_data(Final_Frequency, overwrite = TRUE)
 
 # Cladonia and Sphagnum habitat codes are exported from the exceptions_and_rules.csv
 # file. These are the habitat types where we want to show these groups, else hide them.
+

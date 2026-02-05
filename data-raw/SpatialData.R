@@ -50,7 +50,7 @@ SpatialData <- terra::vect("data-raw/Spatial.geojson") |>
 
 
 
-Ellenberg_CSR <- readRDS("data-raw/CRS_Ellenberg_Dataset.rds")
+Ellenberg_CSR <- read_xlsx("data-raw/CRS_Ellenberg_Dataset.xlsx")
 
 
 Final_Frequency <- read_csv("data-raw/Final_Frequency.csv") |>
@@ -67,7 +67,7 @@ for(i in 1:nrow(SpatialData)){
     try({
         suppressMessages(
             SpatialData$Artsindeks[i] <- Artscore::Artscore(
-                ScientificName = Temp$species, 
+                ScientificName = Temp$species,
                 Habitat_code = unique(Temp$habtype)
             )$Artsindex
         )
@@ -99,8 +99,9 @@ SpatialDataMax <- SpatialData |>
 Plots <- SpatialDataMedian |>
     dplyr::left_join(Final_Frequency, multiple = "all") |>
     dplyr::left_join(
-        Ellenberg_CSR, 
-        multiple = "all", 
+        Ellenberg_CSR,
+        by = join_by("species" == "Videnskabeligt_navn"),
+        multiple = "all",
         relationship = "many-to-many"
     ) |>
     dplyr::filter(!is.na(habitat_name)) |>
