@@ -122,8 +122,6 @@ app_server <- function(input, output, session) {
     })
   })
 
-
-
   # output$Test <- shiny::renderText({
   #   my_habitatdata()$MajorHabName[1]
   # })
@@ -183,8 +181,12 @@ app_server <- function(input, output, session) {
     rvs$Histogram <- G
     plotly::ggplotly(G)
   })
-  output$plot_csr <- plotly::renderPlotly({
 
+  output$plot_ellenberg_explanation <- renderText({ print(
+    "The above figure showes box plots of the avaliable
+    Ellenberg values from the species list.") })
+
+  output$plot_csr <- plotly::renderPlotly({
     rvs$Dataset <- my_habitatdata() |>
       dplyr::select(C, R, S) |>
       dplyr::filter(!is.na(C))
@@ -224,6 +226,10 @@ app_server <- function(input, output, session) {
 
   })
 
+  output$plot_csr_explanation <- renderText({ print(
+    "The above figure showes the spread of the Grime's strategies
+    from the species list. Each point is a species.") })
+
   output$tbl_myhab <- DT::renderDT({
     Table <- my_habitatdata() |>
       mutate(Accepteret_dansk_navn =
@@ -245,16 +251,17 @@ app_server <- function(input, output, session) {
         photo_file
       ) |>
       dplyr::mutate_if(is.numeric, round) |>
-      dplyr::distinct()
+      dplyr::distinct() |>
+      dplyr::rename('Danish name' = Accepteret_dansk_navn, 'Scientific name' = species)
 
     rvs$SpeciesList <- Table
     Table  |>
       dplyr::mutate(
-        Accepteret_dansk_navn = paste0(
+        `Danish name` = paste0(
           '<div class="hover-name"><a href="https://arter.dk/taxa/',
           taxon_id_Arter,
           '" target="_blank">',
-          Accepteret_dansk_navn,
+          `Danish name`,
           '<div class="hover-image"><img src="',
           'Pictures/',
           photo_file,
@@ -271,7 +278,17 @@ app_server <- function(input, output, session) {
         target = 'row',
         backgroundColor = DT::styleEqual(c(NA, "I", "C"), c('white', '#a6d96a', '#fdae61'))
       )
+
   })
+
+  output$tbl_myhab_explanation <- renderText({ print(
+    "The following table shows species list for a randomly selected NOVANA plot
+    along with each species' Ellenberg values and Grime's strategy.
+    Green species are indicator species, meaning they are explicitly
+    mentioned in the legal definition of a habitat type according to
+    the EU Habitats Directive. Orange species are not part of the legal
+    difinition of the habitat type but are still characteristic of said
+    habitat type.") })
 
   output$report <- downloadHandler(
     filename = paste0("Exam_Test", format(Sys.time(), "%Y-%m-%d"), ".pdf"),
