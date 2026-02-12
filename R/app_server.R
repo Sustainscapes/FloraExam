@@ -201,6 +201,12 @@ app_server <- function(input, output, session) {
         b = ~R,
         c = ~S,
         text = ~Strategy,
+        hovertemplate = paste(
+          "C: %{a}<br>",
+          "R: %{b}<br>",
+          "S: %{c}<br>",
+          "Strategy: %{text}<extra></extra>"
+        ),
         marker = list(
           symbol = "100",
           color = my_habitatdata()$RGB,
