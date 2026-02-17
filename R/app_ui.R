@@ -66,11 +66,19 @@ app_ui <- function(request) {
         shiny::mainPanel(
           shiny::conditionalPanel(
             condition = "input.update != 0",
-            shiny::downloadButton("report", "Generate pdf")),
-          shiny::textOutput("Artscore"),
-          DT::DTOutput("tbl_myhab"),
-          plotly::plotlyOutput("plot_ellenberg"),
-          plotly::plotlyOutput("plot_csr", width = "90%", height = "90%")
+            shiny::downloadButton("report", "Generate pdf"),
+            div(style = "height:10px"),
+            shiny::textOutput("Artscore"),
+            div(style = "height:25px"),
+            shiny::textOutput("tbl_myhab_explanation"),
+            DT::DTOutput("tbl_myhab"),
+            div(style = "height:25px"),
+            plotly::plotlyOutput("plot_ellenberg"),
+            shiny::textOutput("plot_ellenberg_explanation"),
+            div(style = "height:50px"),
+            plotly::plotlyOutput("plot_csr", width = "90%", height = "90%"),
+            shiny::textOutput("plot_csr_explanation"),
+            div(style = "height:100px"))
         )
       )
     )

@@ -49,7 +49,7 @@ app_server <- function(input, output, session) {
         dplyr::slice_sample(n = 1) |>
         dplyr::left_join(FloraExam::Final_Frequency) |>
         dplyr::left_join(dplyr::select(FloraExam::Characteristic_Species, c(Taxa, habtype, characteristic)), by = dplyr::join_by(habtype, species == Taxa)) |>
-        dplyr::left_join(FloraExam::Ellenberg_CSR, by = dplyr::join_by(species == matched_name2)) |>
+        dplyr::left_join(FloraExam::Ellenberg_CSR, by = dplyr::join_by(species == Videnskabeligt_navn)) |>
         dplyr::mutate(
           species = ifelse(
             species == "Cladonia",
@@ -79,7 +79,7 @@ app_server <- function(input, output, session) {
         dplyr::slice_sample(n = 1) |>
         dplyr::left_join(FloraExam::Final_Frequency) |>
         dplyr::left_join(dplyr::select(FloraExam::Characteristic_Species, c(Taxa, habtype, characteristic)), by = dplyr::join_by(habtype, species == Taxa)) |>
-        dplyr::left_join(FloraExam::Ellenberg_CSR, by = dplyr::join_by(species == matched_name2)) |>
+        dplyr::left_join(FloraExam::Ellenberg_CSR, by = dplyr::join_by(species == Videnskabeligt_navn)) |>
         dplyr::mutate(
           species = ifelse(
             species == "Cladonia",
@@ -121,8 +121,6 @@ app_server <- function(input, output, session) {
       rvs$Artscore
     })
   })
-
-
 
   # output$Test <- shiny::renderText({
   #   my_habitatdata()$MajorHabName[1]
@@ -170,21 +168,25 @@ app_server <- function(input, output, session) {
 
   output$plot_ellenberg <- plotly::renderPlotly({
     Medians <- my_habitatdata() |>
-      dplyr::select(light, temperature, moisture, reaction, nutrients, salinity) |>
+      dplyr::select(light, moisture, reaction, nutrients, salinity) |>
       tidyr::pivot_longer(tidyr::everything(), names_to = "Ellenberg") |>
       dplyr::group_by(Ellenberg) |>
       dplyr::summarise(Median = median(value, na.rm = T))
 
     G <- my_habitatdata() |>
-      dplyr::select(light, temperature, moisture, reaction, nutrients, salinity) |>
+      dplyr::select(light, moisture, reaction, nutrients, salinity) |>
       tidyr::pivot_longer(tidyr::everything(), names_to = "Ellenberg") |>
       ggplot2::ggplot(ggplot2::aes(x = Ellenberg, y = value)) + ggplot2::geom_boxplot() +
       ggplot2::coord_flip() + ggplot2::theme_bw() + ylim(c(0,10)) + ggplot2::xlab("Ecological indicator value") + ggplot2::xlab("Ecological indicator value") + ggrepel::geom_text_repel(data = Medians, aes(x = Ellenberg, y = Median, label = round(Median, 2)))
     rvs$Histogram <- G
     plotly::ggplotly(G)
   })
-  output$plot_csr <- plotly::renderPlotly({
 
+  output$plot_ellenberg_explanation <- renderText({ print(
+    "The above figure showes box plots of the avaliable
+    Ellenberg values from the species list.") })
+
+  output$plot_csr <- plotly::renderPlotly({
     rvs$Dataset <- my_habitatdata() |>
       dplyr::select(C, R, S) |>
       dplyr::filter(!is.na(C))
@@ -198,7 +200,13 @@ app_server <- function(input, output, session) {
         a = ~C,
         b = ~R,
         c = ~S,
-        text = ~Label,
+        text = ~Strategy,
+        hovertemplate = paste(
+          "C: %{a}<br>",
+          "R: %{b}<br>",
+          "S: %{c}<br>",
+          "Strategy: %{text}<extra></extra>"
+        ),
         marker = list(
           symbol = "100",
           color = my_habitatdata()$RGB,
@@ -224,13 +232,19 @@ app_server <- function(input, output, session) {
 
   })
 
+  output$plot_csr_explanation <- renderText({ print(
+    "The above figure showes the spread of the Grime's strategies
+    from the species list. Each point is a species.") })
+
   output$tbl_myhab <- DT::renderDT({
     Table <- my_habitatdata() |>
+      mutate(Accepteret_dansk_navn =
+               ifelse(is.na(dansk_flora_name),
+                      Accepteret_dansk_navn, dansk_flora_name)) %>%
       dplyr::select(
         Accepteret_dansk_navn,
         species,
         light,
-        temperature,
         moisture,
         reaction,
         nutrients,
@@ -243,16 +257,17 @@ app_server <- function(input, output, session) {
         photo_file
       ) |>
       dplyr::mutate_if(is.numeric, round) |>
-      dplyr::distinct()
+      dplyr::distinct() |>
+      dplyr::rename('Danish name' = Accepteret_dansk_navn, 'Scientific name' = species)
 
     rvs$SpeciesList <- Table
     Table  |>
       dplyr::mutate(
-        Accepteret_dansk_navn = paste0(
-          '<div class="hover-name"><a href="https://arter.dk/taxa/taxon/details/',
+        `Danish name` = paste0(
+          '<div class="hover-name"><a href="https://arter.dk/taxa/',
           taxon_id_Arter,
           '" target="_blank">',
-          Accepteret_dansk_navn,
+          `Danish name`,
           '<div class="hover-image"><img src="',
           'Pictures/',
           photo_file,
@@ -262,14 +277,25 @@ app_server <- function(input, output, session) {
       dplyr::distinct() |>
       DT::datatable(options = list(lengthMenu = list(c(50, -1), c('50', 'All')),
                                    columnDefs = list(
-                                     list(visible = FALSE, targets = c(13, 14)))  # Indices of taxon_id_Arter and photo_file
+                                     list(visible = FALSE, targets = c(12, 13)))  # Indices of taxon_id_Arter and photo_file
       ), escape = FALSE) %>%
       DT::formatStyle(
         'characteristic',
         target = 'row',
         backgroundColor = DT::styleEqual(c(NA, "I", "C"), c('white', '#a6d96a', '#fdae61'))
       )
+
   })
+
+  output$tbl_myhab_explanation <- renderText({ print(
+    "The following table shows species list for a randomly selected NOVANA plot
+    along with each species' Ellenberg values and Grime's strategy.
+    Green species are indicator species, meaning they are explicitly
+    mentioned in the legal definition of a habitat type according to
+    the EU Habitats Directive. Orange species are not part of the legal
+    difinition of the habitat type but are still characteristic of said
+    habitat type.") })
+
   output$report <- downloadHandler(
     filename = paste0("Exam_Test", format(Sys.time(), "%Y-%m-%d"), ".pdf"),
     content = function(file) {

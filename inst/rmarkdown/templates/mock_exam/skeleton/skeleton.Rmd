@@ -42,7 +42,6 @@ Table <- Table |>
     `Accepted Danish name` = Accepteret_dansk_navn,
     `Species` = species,
     `Light` = light,
-    `Temperature` = temperature,
     `Moisture` = moisture,
     `Reaction` = reaction,
     `Nutrients` = nutrients,
