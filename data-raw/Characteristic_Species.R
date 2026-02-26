@@ -10,8 +10,8 @@ Characteristic_Species <- readxl::read_xlsx("data-raw/DFV_app_indicator_common_s
   dplyr::rename(Taxa = videnskabeligt_navn) #|>
 #  dplyr::mutate(habtype = as.numeric(habtype))
 
-Cleaned_Taxons <- SDMWorkflows::Clean_Taxa(Taxons = Characteristic_Species$Taxa, Species_Only = F)
-
-Characteristic_Species <- Cleaned_Taxons |> dplyr::left_join(Characteristic_Species)
+# Cleaned_Taxons <- SDMWorkflows::Clean_Taxa(Taxons = Characteristic_Species$Taxa, Species_Only = F)
+#
+# Characteristic_Species <- Cleaned_Taxons |> dplyr::left_join(Characteristic_Species)
 
 usethis::use_data(Characteristic_Species, overwrite = TRUE)
