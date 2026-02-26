@@ -212,7 +212,6 @@ app_server <- function(input, output, session) {
           "R: %{b}<br>",
           "S: %{c}<br>",
           "%{text}<extra></extra>"
-#          "Strategy: %{text}<extra></extra>"
         ),
         marker = list(
           symbol = "100",
