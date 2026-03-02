@@ -194,18 +194,24 @@ app_server <- function(input, output, session) {
     message(nrow(rvs$Dataset))
 
     Tern <- plotly::plot_ly(my_habitatdata()) |>
+      mutate(Accepteret_dansk_navn =
+               ifelse(is.na(dansk_flora_name),
+                      Accepteret_dansk_navn, dansk_flora_name)) %>%
       plotly::add_trace(
         type = 'scatterternary',
         mode = 'markers',
         a = ~C,
         b = ~R,
         c = ~S,
-        text = ~Strategy,
+        # text = ~Strategy,
+        # navn = ~Accepteret_dansk_navn,
+        text = ~paste("Species:", Accepteret_dansk_navn, "<br>",
+                      "Strategy:", Strategy, "<extra></extra>"),
         hovertemplate = paste(
-          "C: %{a}<br>",
+          " C: %{a}<br>",
           "R: %{b}<br>",
           "S: %{c}<br>",
-          "Strategy: %{text}<extra></extra>"
+          "%{text}<extra></extra>"
         ),
         marker = list(
           symbol = "100",
